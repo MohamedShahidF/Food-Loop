@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FoodLoop – Share surplus food, skip the bin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef1f7; --card:#ffffff; --ink:#16213e; --muted:#59627f; --line:#cfd5e4;
+  --blue:#2447d6; --tomato:#d63a1f; --butter:#ffd449; --mint:#bfe5cc; --lilac:#d7c8f5; --peach:#f6b8a8;
+  --on-fixed:#16213e;
+  --head:'Bricolage Grotesque','Trebuchet MS',Georgia,sans-serif;
+  --body:'Figtree','Segoe UI',Helvetica,Arial,sans-serif;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#0e1325;--card:#181f3a;--ink:#eef0fa;--muted:#a3abc9;--line:#30395f;--blue:#6e8bff;}
+}
+:root[data-theme="dark"]{--bg:#0e1325;--card:#181f3a;--ink:#eef0fa;--muted:#a3abc9;--line:#30395f;--blue:#6e8bff;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%}
+h1,h2,h3{font-family:var(--head);line-height:1.08;margin:0;letter-spacing:-.02em}
+a{color:inherit}
+img,svg{max-width:100%}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+
+/* header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1.5px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--head);font-weight:800;font-size:1.45rem;letter-spacing:-.03em}
+nav.main{display:none;gap:6px;align-items:center}
+nav.main a{text-decoration:none;font-weight:600;padding:8px 14px;border-radius:999px}
+nav.main a:hover{background:var(--card)}
+nav.main a[aria-current="page"]{background:var(--ink);color:var(--bg)}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border-top:1.5px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 8px;text-decoration:none;font-size:.78rem;font-weight:600;color:var(--muted)}
+.tabbar a svg{width:24px;height:24px}
+.tabbar a[aria-current="page"]{color:var(--blue)}
+@media(min-width:760px){nav.main{display:flex}.tabbar{display:none}}
+main{padding-bottom:96px;min-height:70vh}
+@media(min-width:760px){main{padding-bottom:40px}}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:700 1rem/1 var(--body);padding:14px 22px;border-radius:999px;border:2px solid var(--ink);background:var(--card);color:var(--ink);text-decoration:none;cursor:pointer;box-shadow:3px 3px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+.btn.primary{background:var(--tomato);color:#fff}
+.btn.blue{background:var(--blue);color:#fff}
+.btn.butter{background:var(--butter);color:var(--on-fixed);border-color:var(--on-fixed);box-shadow:3px 3px 0 var(--on-fixed)}
+.btn.small{padding:10px 16px;font-size:.92rem}
+.btn[disabled],.btn.off{background:var(--line);color:var(--muted);box-shadow:none;border-color:var(--line);cursor:not-allowed;pointer-events:none}
+.btn.ghost{box-shadow:none;border-width:1.5px}
+.btn.ghost:hover{transform:none;background:var(--card)}
+
+/* hero */
+.hero{padding:34px 0 20px}
+.hero .wrap{display:grid;gap:26px;align-items:center}
+.hero h1{font-size:clamp(2.3rem,8vw,4.5rem);font-weight:800;max-width:13ch}
+.hero p.lead{font-size:1.15rem;color:var(--muted);max-width:44ch;margin:18px 0 26px}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:14px}
+.hero .live{margin-top:22px;font-size:.95rem;color:var(--muted)}
+.hero .live b{color:var(--ink)}
+.heroart{position:relative;max-width:480px;margin:0 auto;width:100%}
+.heroart .sun{position:absolute;inset:6% 6% 14% 6%;background:var(--butter);border-radius:50%}
+.heroart svg{position:relative;width:100%;height:auto;overflow:visible}
+@media(min-width:860px){.hero{padding:60px 0 30px}.hero .wrap{grid-template-columns:1.1fr .9fr}}
+.pop{cursor:pointer;transform-box:fill-box;transform-origin:50% 100%;transition:transform .18s}
+.pop:hover{transform:translateY(-9px) rotate(-3deg)}
+.pop.wig{animation:wig .5s}
+@keyframes wig{0%{transform:rotate(0)}25%{transform:translateY(-12px) rotate(6deg)}55%{transform:translateY(-6px) rotate(-5deg)}100%{transform:rotate(0)}}
+.hint{font-size:.85rem;color:var(--muted);text-align:center;margin-top:6px}
+
+/* sections */
+section.blk{padding:46px 0}
+.sect-h{display:flex;justify-content:space-between;align-items:end;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+.sect-h h2{font-size:clamp(1.7rem,4.5vw,2.5rem);font-weight:800}
+.sect-h p{margin:6px 0 0;color:var(--muted)}
+.cats{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(min-width:760px){.cats{grid-template-columns:repeat(5,1fr)}}
+.cat-tile{display:block;text-decoration:none;color:var(--on-fixed);border:2px solid var(--on-fixed);border-radius:22px 22px 22px 6px;padding:12px 12px 14px;transition:transform .15s}
+.cat-tile:hover{transform:rotate(-2deg) translateY(-4px)}
+.cat-tile svg{width:100%;height:auto;max-height:110px;display:block}
+.cat-tile span{display:block;font-family:var(--head);font-weight:700;font-size:1.05rem;margin-top:4px}
+.steps{display:grid;gap:18px}
+@media(min-width:760px){.steps{grid-template-columns:repeat(3,1fr);gap:26px}}
+.step{display:flex;gap:16px;align-items:flex-start}
+.step .n{flex:none;width:44px;height:44px;border-radius:50%;background:var(--butter);color:var(--on-fixed);border:2px solid var(--on-fixed);display:grid;place-items:center;font:800 1.15rem var(--head)}
+.step h3{font-size:1.25rem;margin-bottom:4px}
+.step p{margin:0;color:var(--muted)}
+.band{background:var(--butter);color:var(--on-fixed);border-radius:28px;padding:34px 26px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
+.band h2{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:800;max-width:20ch}
+.band .btn{background:var(--on-fixed);color:#fff;border-color:var(--on-fixed);box-shadow:3px 3px 0 var(--tomato)}
+
+/* cards */
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:22px 22px 14px 14px;overflow:hidden;display:flex;flex-direction:column}
+.card.hl{outline:3px solid var(--blue);outline-offset:3px}
+.tile{position:relative;display:block;height:150px;border-bottom:1.5px solid var(--line)}
+.tile svg{height:100%;width:100%;padding:10px}
+.card.out .tile svg,.card.expired .tile svg{opacity:.45;filter:grayscale(.7)}
+.chip{position:absolute;font-size:.78rem;font-weight:700;padding:4px 10px;border-radius:999px;background:#fff;color:var(--on-fixed);border:1.5px solid var(--on-fixed)}
+.chip.cat{left:10px;bottom:10px}
+.chip.st{right:10px;top:10px}
+.chip.soon{background:var(--tomato);color:#fff;border-color:var(--tomato)}
+.chip.gone{background:#cfd3e0;border-color:#9aa1b8;color:#3a4260}
+.cbody{padding:16px 16px 18px;display:flex;flex-direction:column;gap:6px;flex:1}
+.cbody h3{font-size:1.28rem;font-weight:700}
+.cbody p{margin:0;font-size:.93rem;color:var(--muted)}
+.cbody .loc{display:flex;gap:6px;align-items:flex-start;color:var(--ink)}
+.cbody .loc svg{flex:none;margin-top:3px}
+.qty{margin-top:8px}
+.bar{height:9px;border-radius:9px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--blue);border-radius:9px;transition:width .5s}
+.qty span{display:block;font-size:.9rem;margin-top:6px}
+.crow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:auto;padding-top:12px}
+.time{display:flex;gap:6px;align-items:center;font-size:.88rem;font-weight:600;color:var(--muted)}
+
+/* find filters */
+.filters{background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:16px;display:grid;gap:14px;margin-bottom:22px}
+.frow{display:grid;gap:12px}
+@media(min-width:760px){.frow.three{grid-template-columns:2fr 1.4fr 1.2fr}}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:.92rem}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;width:100%}
+input:focus,select:focus,textarea:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var(--blue)}
+textarea{min-height:100px;resize:vertical}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{font:600 .92rem var(--body);padding:8px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.checkrow{display:flex;gap:10px;align-items:center;font-size:.95rem;font-weight:500}
+.checkrow input{width:20px;height:20px;accent-color:var(--blue)}
+.count{color:var(--muted);margin:0 0 14px}
+.empty{text-align:center;padding:46px 20px;border:2px dashed var(--line);border-radius:22px}
+.empty h3{font-size:1.4rem;margin-bottom:8px}
+.empty p{color:var(--muted);margin:0 0 18px}
+
+/* forms / pages */
+.pagehead{padding:34px 0 22px}
+.pagehead h1{font-size:clamp(2rem,6vw,3.2rem);font-weight:800}
+.pagehead p{color:var(--muted);margin:10px 0 0;max-width:56ch;font-size:1.05rem}
+.two{display:grid;gap:24px}
+@media(min-width:900px){.two{grid-template-columns:1.25fr .75fr;align-items:start}.two.even{grid-template-columns:1fr 1fr}}
+.panel{background:var(--card);border:1.5px solid var(--line);border-radius:24px;padding:22px}
+.fgrid{display:grid;gap:16px}
+@media(min-width:620px){.fgrid.c2{grid-template-columns:1fr 1fr}.fgrid .full{grid-column:1/-1}}
+.hintx{font-size:.84rem;color:var(--muted);font-weight:400}
+.err{color:var(--tomato);font-weight:600;min-height:1.4em;margin:4px 0 0}
+:root[data-theme="dark"] .err{color:#ff8a73}
+.aside{background:var(--mint);color:var(--on-fixed);border-radius:24px;padding:22px;border:2px solid var(--on-fixed)}
+.aside svg{width:150px;display:block;margin:0 auto 6px}
+.aside h3{font-size:1.25rem;margin-bottom:8px}
+.aside ul{margin:0;padding-left:20px}
+.aside li{margin-bottom:8px}
+.itemhead{border-radius:24px;overflow:hidden;border:1.5px solid var(--line);background:var(--card)}
+.itemhead .big{height:230px;display:grid;place-items:center;border-bottom:1.5px solid var(--line)}
+.itemhead .big svg{height:84%;width:auto}
+.itemhead .info{padding:20px}
+.itemhead h2{font-size:1.9rem;margin-bottom:8px}
+.meta{display:grid;gap:8px;margin:14px 0}
+.meta div{display:flex;gap:10px;align-items:flex-start}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{width:48px;height:48px;border-radius:50%;border:2px solid var(--ink);background:var(--card);color:var(--ink);font:700 1.5rem var(--body);cursor:pointer;line-height:1}
+.stepper button:active{transform:scale(.92)}
+.stepper input{width:90px;text-align:center;font-size:1.3rem;font-weight:700;padding:10px}
+.after{margin:12px 0 18px;color:var(--muted)}
+.ok{text-align:center;padding:10px 4px}
+.ok .stamp{display:inline-block;transform:rotate(-4deg);border:3px solid var(--blue);color:var(--blue);padding:6px 16px;border-radius:12px;font:800 1.5rem var(--head);margin-bottom:14px;animation:stamp .4s cubic-bezier(.2,1.6,.4,1)}
+@keyframes stamp{from{transform:rotate(-14deg) scale(1.8);opacity:0}to{transform:rotate(-4deg) scale(1);opacity:1}}
+.ok h2{font-size:1.8rem;margin-bottom:8px}
+.code{display:inline-block;margin:12px 0;padding:10px 20px;border-radius:12px;background:var(--butter);color:var(--on-fixed);font:800 1.7rem var(--head);letter-spacing:.06em;border:2px dashed var(--on-fixed)}
+.ok .acts{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+
+/* dashboard */
+.stats{display:grid;gap:16px}
+@media(min-width:760px){.stats{grid-template-columns:1.4fr 1fr 1fr 1fr}}
+.stat{border-radius:24px;padding:22px;border:2px solid var(--on-fixed);color:var(--on-fixed)}
+.stat .v{font:800 clamp(2.4rem,7vw,3.6rem)/1 var(--head);letter-spacing:-.03em}
+.stat .l{font-weight:600;margin-top:6px}
+.stat small{display:block;opacity:.8;margin-top:4px}
+.s1{background:var(--blue);color:#fff;border-color:var(--blue)}
+.s2{background:var(--butter)}.s3{background:var(--mint)}.s4{background:var(--lilac)}
+.cols{display:grid;gap:22px;margin-top:26px}
+@media(min-width:900px){.cols{grid-template-columns:1fr 1fr}}
+.panel h3{font-size:1.3rem;margin-bottom:14px}
+.hrow{display:grid;grid-template-columns:110px 1fr 34px;gap:10px;align-items:center;margin-bottom:12px;font-size:.92rem}
+.hrow .t{height:22px;background:var(--bg);border-radius:8px;overflow:hidden}
+.hrow .t i{display:block;height:100%;border-radius:8px;width:0;transition:width .8s}
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1.5px solid var(--line);font-size:.95rem}
+.list li:last-child{border:0}
+.list small{color:var(--muted);display:block}
+.list a{font-weight:700;color:var(--blue);text-decoration:none;white-space:nowrap}
+.fine{font-size:.85rem;color:var(--muted);margin-top:22px}
+.linkbtn{background:none;border:0;color:var(--blue);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer;padding:0}
+
+footer{border-top:1.5px solid var(--line);padding:26px 0 120px;color:var(--muted);font-size:.92rem}
+@media(min-width:760px){footer{padding-bottom:36px}}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+.toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,30px);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:14px;font-weight:600;opacity:0;pointer-events:none;transition:.3s;z-index:50;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(min-width:760px){.toast{bottom:30px}}
+.fadein{animation:fi .35s ease both}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- illustration library -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<defs>
+<symbol id="i-bowl" viewBox="0 0 120 120" stroke="#16213e" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M42 24c-5-5 4-9-1-15M60 22c-5-5 4-9-1-15M78 24c-5-5 4-9-1-15" fill="none" stroke-width="3"/>
+  <path d="M22 62c2-20 20-30 38-30s36 10 38 30z" fill="#fff4cf"/>
+  <circle cx="44" cy="52" r="4" fill="#3fa66b"/><circle cx="62" cy="46" r="4" fill="#f08a24"/><circle cx="76" cy="55" r="4" fill="#3fa66b"/><circle cx="55" cy="58" r="3.5" fill="#e5472b"/>
+  <path d="M14 62h92c0 24-20 42-46 42S14 86 14 62z" fill="#2447d6"/>
+  <path d="M30 78c4 8 10 12 18 14" fill="none" stroke="#9db2ff" stroke-width="3"/>
+</symbol>
+<symbol id="i-bread" viewBox="0 0 120 120" stroke="#16213e" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M16 62c0-22 20-34 44-34s44 12 44 34c0 8-4 12-8 13v20c0 4-3 7-7 7H31c-4 0-7-3-7-7V75c-4-1-8-5-8-13z" fill="#eaa648"/>
+  <path d="M40 46l8 12M60 42l8 12M80 46l8 12" fill="none" stroke="#a9691b"/>
+  <path d="M34 82v8" fill="none" stroke="#f8d189"/>
+</symbol>
+<symbol id="i-apple" viewBox="0 0 120 120" stroke="#16213e" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M60 40C46 28 22 36 24 66c2 24 20 40 36 34 16 6 34-10 36-34 2-30-22-38-36-26z" fill="#e5472b"/>
+  <path d="M60 40c0-8 2-14 7-20" fill="none"/>
+  <path d="M66 26c8-12 22-10 26-4-8 10-20 12-26 4z" fill="#3fa66b"/>
+  <path d="M36 56c-2 8 0 16 4 22" fill="none" stroke="#ff9d8a"/>
+</symbol>
+<symbol id="i-carrot" viewBox="0 0 120 120" stroke="#16213e" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M30 38c14-10 30-4 38 8l30 48c2 4-1 8-5 7L36 84c-10-6-14-30-6-46z" fill="#f08a24" transform="rotate(8 60 60)"/>
+  <path d="M34 36c-4-10-2-18 4-24 4 8 4 16 0 24zM28 44c-10-4-16-12-16-20 10 0 16 8 16 20zM44 32c2-10 10-18 20-18-2 12-10 18-20 18z" fill="#3fa66b"/>
+  <path d="M56 56l8 2M66 70l8 2M50 72l7 2" fill="none" stroke="#b55e0a"/>
+</symbol>
+<symbol id="i-sandwich" viewBox="0 0 120 120" stroke="#16213e" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M16 62c0-18 20-28 44-28s44 10 44 28z" fill="#eaa648"/>
+  <rect x="14" y="62" width="92" height="10" rx="5" fill="#e5472b"/>
+  <path d="M12 72c8-8 14 6 24-2s16 6 24-2 16 6 24-2 14 6 24-2v14H12z" fill="#3fa66b"/>
+  <path d="M16 86h88c0 12-8 18-18 18H34c-10 0-18-6-18-18z" fill="#eaa648"/>
+  <path d="M44 46h.1M62 42h.1M78 48h.1" stroke="#fff4cf" stroke-width="5"/>
+</symbol>
+<symbol id="i-milk" viewBox="0 0 120 120" stroke="#16213e" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M36 46h48v58H36z" fill="#ffffff"/>
+  <path d="M36 46l10-20h28l10 20z" fill="#ffd449"/>
+  <path d="M46 26l4-10h20l4 10" fill="#ffd449"/>
+  <path d="M60 62c6 8 10 12 10 18a10 10 0 0 1-20 0c0-6 4-10 10-18z" fill="#2447d6"/>
+</symbol>
+</defs>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#/" aria-label="FoodLoop home">
+      <svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="#ffd449" stroke="#16213e" stroke-width="2.5"/><path d="M12 22a9 9 0 0 1 15-8" fill="none" stroke="#2447d6" stroke-width="3.5" stroke-linecap="round"/><path d="M28 18a9 9 0 0 1-15 8" fill="none" stroke="#d63a1f" stroke-width="3.5" stroke-linecap="round"/></svg>
+      FoodLoop
+    </a>
+    <nav class="main" aria-label="Main">
+      <a href="#/" data-nav="home">Home</a>
+      <a href="#/find" data-nav="find">Find Food</a>
+      <a href="#/donate" data-nav="donate">Donate Food</a>
+      <a href="#/impact" data-nav="impact">Impact</a>
+    </nav>
+  </div>
+</header>
+
+<main id="app" tabindex="-1"></main>
+
+<footer>
+  <div class="wrap">
+    <span>FoodLoop – a hackathon project to cut campus and restaurant food waste.</span>
+    <span>Demo data is saved in your browser only.</span>
+  </div>
+</footer>
+
+<nav class="tabbar" aria-label="Main tabs">
+  <a href="#/" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Home</a>
+  <a href="#/find" data-nav="find"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>Find</a>
+  <a href="#/donate" data-nav="donate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Donate</a>
+  <a href="#/impact" data-nav="impact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>Impact</a>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------- data ---------- */
+const CATS=['Cooked meals','Bakery','Fruits & veg','Packed food','Dairy & drinks'];
+const ART={
+  'Cooked meals':{sym:'i-bowl',bg:'#ffd449'},
+  'Bakery':{sym:'i-bread',bg:'#f6b8a8'},
+  'Fruits & veg':{sym:'i-apple',bg:'#bfe5cc'},
+  'Packed food':{sym:'i-sandwich',bg:'#bcd0ff'},
+  'Dairy & drinks':{sym:'i-milk',bg:'#d7c8f5'}
+};
+const BAR_COL={'Cooked meals':'#e8b400','Bakery':'#e0715a','Fruits & veg':'#3fa66b','Packed food':'#4d6bff','Dairy & drinks':'#8f6fd8'};
+const KG_PER_PORTION=0.4;
+const KEY='foodloop_v1';
+const MIN=60000;
+let db;
+
+function seed(){
+  const now=Date.now();
+  const L=[
+    ['Veg biryani trays','Cooked meals',40,28,'Main Canteen, Sunrise Engineering College','Sunrise College Canteen',150,'Made for the lunch rush and about a third is left. Contains rice, mixed veg, no nuts. Bring your own container if you can.'],
+    ['Fresh bread loaves','Bakery',24,24,'Crumb & Co. Bakery, MG Road','Crumb & Co.',90,'Baked this morning, unsliced. Whole wheat and white loaves. Ask at the counter for the FoodLoop bag.'],
+    ['Mixed fruit boxes','Fruits & veg',15,9,'Hostel Block B Mess','Block B Mess Committee',300,'Bananas, apples and a few oranges from the weekend event. All ripe, none bruised.'],
+    ['Veg sandwiches','Packed food',30,30,'Hotel Saffron, Station Road','Hotel Saffron',60,'Wrapped sandwiches from a cancelled catering order. Contains gluten and dairy. Please eat today.'],
+    ['Milk packets (500 ml)','Dairy & drinks',50,36,'Campus Co-op Store','Campus Co-op',420,'Sealed packets, best before tomorrow. Keep chilled after pickup.'],
+    ['Dal and rice meal boxes','Cooked meals',20,20,'Greenleaf Restaurant, Lake View','Greenleaf Restaurant',120,'Sealed boxes packed at closing. Vegetarian, mildly spiced.'],
+    ['Seasonal vegetables','Fruits & veg',12,12,'Weekly Market, Stall 14','Stall 14 Growers',200,'Tomatoes, gourds and spinach that did not sell. Good for a hostel kitchen or a community meal.'],
+    ['Pastry assortment','Bakery',18,0,'Crumb & Co. Bakery, MG Road','Crumb & Co.',30,'Everything claimed out by the evening walk-in group.']
+  ].map((r,i)=>({id:'s'+(i+1),name:r[0],category:r[1],quantity:r[2],remaining:r[3],location:r[4],donor:r[5],until:now+r[6]*MIN,desc:r[7],created:now-(40+i*17)*MIN}));
+  const names=['Asha K.','Ravi Foundation','Hostel B volunteers','Maya P.','Night Shelter Team','Imran S.','Student Union','Priya N.'];
+  const C=[];let k=0;
+  L.forEach(l=>{
+    let left=l.quantity-l.remaining;
+    while(left>0){const q=Math.min(left,Math.max(2,Math.ceil(left/ (1+(k%2)))));
+      C.push({id:'c'+(k++),listingId:l.id,item:l.name,category:l.category,name:names[k%names.length],qty:q,at:now-(15+k*23)*MIN,code:'FL-'+(1000+k*137)});left-=q;}
+  });
+  // earlier history so the dashboard has some weight
+  [['Chapati and sabzi','Cooked meals',35,'Ravi Foundation',26*60],['Garden salad boxes','Fruits & veg',22,'Night Shelter Team',30*60],['Rolls','Bakery',28,'Student Union',50*60],['Fruit cups','Packed food',16,'Asha K.',54*60],['Curd cups','Dairy & drinks',24,'Maya P.',74*60]].forEach(h=>{
+    C.push({id:'c'+(k++),listingId:'old',item:h[0],category:h[1],name:h[3],qty:h[2],at:now-h[4]*MIN,code:'FL-'+(1000+k*137)});
+  });
+  C.sort((a,b)=>b.at-a.at);
+  return {listings:L,claims:C};
+}
+function load(){try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);if(d&&Array.isArray(d.listings)&&Array.isArray(d.claims))return d;}}catch(e){}return seed();}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){}}
+db=load();
+
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pin='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+const clock='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+function minsLeft(l){return Math.floor((l.until-Date.now())/MIN);}
+function status(l){if(l.remaining<=0)return 'out';const m=minsLeft(l);if(m<=0)return 'expired';if(m<60)return 'soon';return 'open';}
+function timeLeft(l){const m=minsLeft(l);if(l.remaining<=0)return 'All claimed';if(m<=0)return 'Expired';if(m<60)return m+' min left';const h=Math.floor(m/60);return h+'h '+(m%60)+'m left';}
+function fmtTime(ts){const d=new Date(ts),n=new Date();const t=d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});const day=d.toDateString()===n.toDateString()?'Today':(d.toDateString()===new Date(n.getTime()+864e5).toDateString()?'Tomorrow':d.toLocaleDateString([], {day:'numeric',month:'short'}));return day+', '+t;}
+function ago(ts){const m=Math.max(1,Math.round((Date.now()-ts)/MIN));if(m<60)return m+' min ago';if(m<1440)return Math.round(m/60)+' h ago';return Math.round(m/1440)+' d ago';}
+function isActive(l){return l.remaining>0&&l.until>Date.now();}
+function stats(){
+  const portions=db.claims.reduce((s,c)=>s+c.qty,0);
+  return {portions,kg:Math.round(portions*KG_PER_PORTION),claims:db.claims.length,active:db.listings.filter(isActive).length};
+}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2800);}
+function tileArt(cat){const a=ART[cat]||ART[CATS[0]];return `<svg viewBox="0 0 120 120" aria-hidden="true"><use href="#${a.sym}"/></svg>`;}
+
+function card(l,hl){
+  const s=status(l),a=ART[l.category]||ART[CATS[0]];
+  const pct=Math.max(0,Math.round(l.remaining/l.quantity*100));
+  const chip=s==='soon'?'<span class="chip st soon">Ending soon</span>':s==='out'?'<span class="chip st gone">Claimed out</span>':s==='expired'?'<span class="chip st gone">Expired</span>':'';
+  const btn=(s==='out'||s==='expired')?'<span class="btn small off" aria-disabled="true">Unavailable</span>':`<a class="btn small primary" href="#/claim/${esc(l.id)}">Claim</a>`;
+  return `<article class="card ${s} ${hl?'hl':''}" id="l-${esc(l.id)}">
+    <a class="tile" href="#/claim/${esc(l.id)}" style="background:${a.bg}" aria-label="View ${esc(l.name)}">${tileArt(l.category)}<span class="chip cat">${esc(l.category)}</span>${chip}</a>
+    <div class="cbody">
+      <h3>${esc(l.name)}</h3>
+      <p class="loc">${pin}<span>${esc(l.location)}</span></p>
+      <p>Posted by ${esc(l.donor)}</p>
+      <div class="qty"><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div><span><b>${l.remaining}</b> of ${l.quantity} portions left</span></div>
+      <div class="crow"><span class="time">${clock}${timeLeft(l)}</span>${btn}</div>
+    </div></article>`;
+}
+
+/* ---------- views ---------- */
+function viewHome(){
+  const st=stats();
+  const soon=db.listings.filter(isActive).sort((a,b)=>a.until-b.until).slice(0,3);
+  return `<div class="fadein">
+  <section class="hero"><div class="wrap">
+    <div>
+      <h1>Surplus food has a better place to go than the bin.</h1>
+      <p class="lead">Canteens, cafés and restaurants post what they have left. People and organisations nearby claim it before it spoils.</p>
+      <div class="ctas"><a class="btn primary" href="#/donate">Donate Surplus Food</a><a class="btn" href="#/find">Find Food</a></div>
+      <p class="live"><b>${st.portions.toLocaleString()} portions</b> rescued so far, and ${st.active} listings are open right now.</p>
+    </div>
+    <div class="heroart">
+      <div class="sun"></div>
+      <svg viewBox="0 0 440 380" role="img" aria-label="A wooden crate full of bread, fruit, vegetables and a meal bowl">
+        <ellipse cx="220" cy="354" rx="190" ry="14" fill="#16213e" opacity=".18"/>
+        <g class="pop"><use href="#i-bread" x="18" y="60" width="150" height="150"/></g>
+        <g class="pop"><use href="#i-carrot" x="148" y="20" width="130" height="130"/></g>
+        <g class="pop"><use href="#i-bowl" x="262" y="52" width="150" height="150"/></g>
+        <g class="pop"><use href="#i-apple" x="118" y="90" width="130" height="130"/></g>
+        <g class="pop"><use href="#i-milk" x="240" y="108" width="120" height="120"/></g>
+        <g stroke="#16213e" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M28 196h384l-14 148a10 10 0 0 1-10 9H52a10 10 0 0 1-10-9z" fill="#d9a566"/>
+          <path d="M36 250h368M40 300h360" fill="none"/>
+          <path d="M70 196l-4 156M370 196l4 156" fill="none" stroke="#a9742f"/>
+          <g transform="rotate(-6 330 270)"><rect x="262" y="236" width="150" height="56" rx="10" fill="#ffd449"/><circle cx="276" cy="264" r="5" fill="#d9a566"/><text x="338" y="271" text-anchor="middle" font-family="Bricolage Grotesque,Trebuchet MS,sans-serif" font-weight="800" font-size="21" fill="#16213e" stroke="none">Free to claim</text></g>
+        </g>
+      </svg>
+      <p class="hint">Tap the food. It jumps.</p>
+    </div>
+  </div></section>
+
+  <section class="blk"><div class="wrap">
+    <div class="sect-h"><div><h2>What's on the shelf?</h2><p>Pick a kind of food to see what is available.</p></div></div>
+    <div class="cats">${CATS.map(c=>`<a class="cat-tile" href="#/find?cat=${encodeURIComponent(c)}" style="background:${ART[c].bg}">${tileArt(c)}<span>${esc(c)}</span></a>`).join('')}</div>
+  </div></section>
+
+  <section class="blk"><div class="wrap">
+    <div class="sect-h"><h2>How FoodLoop works</h2></div>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><div><h3>Post what's left</h3><p>Name the food, how many portions, where to collect it and until when.</p></div></div>
+      <div class="step"><div class="n">2</div><div><h3>Browse and filter</h3><p>Search by category or pickup spot and sort by what is closing soonest.</p></div></div>
+      <div class="step"><div class="n">3</div><div><h3>Claim and collect</h3><p>Choose how many portions you need. The listing updates straight away, and you get a pickup code.</p></div></div>
+    </div>
+  </div></section>
+
+  <section class="blk"><div class="wrap">
+    <div class="sect-h"><div><h2>Closing soon</h2><p>These need a home first.</p></div><a class="btn small ghost" href="#/find">See all listings</a></div>
+    ${soon.length?`<div class="grid">${soon.map(l=>card(l)).join('')}</div>`:`<div class="empty"><h3>Nothing is open right now</h3><p>Be the first to post surplus food today.</p><a class="btn primary" href="#/donate">Donate Surplus Food</a></div>`}
+  </div></section>
+
+  <section class="blk"><div class="wrap"><div class="band"><h2>Closing time and food still on the counter?</h2><a class="btn" href="#/donate">Post it in a minute</a></div></div></section>
+  </div>`;
+}
+
+/* find page keeps its own filter state */
+const F={q:'',cat:'All',loc:'All',hide:true,sort:'soon'};
+function viewFind(query){
+  const p=new URLSearchParams(query||'');
+  if(p.get('cat')&&CATS.includes(p.get('cat'))){F.cat=p.get('cat');}
+  const hl=p.get('new')||'';
+  const locs=[...new Set(db.listings.map(l=>l.location))].sort();
+  setTimeout(()=>bindFind(hl),0);
+  return `<div class="fadein"><div class="wrap">
+    <div class="pagehead"><h1>Find food near you</h1><p>Everything here was posted by a kitchen or shop nearby. Claim what you can collect before the time runs out.</p></div>
+    <div class="filters">
+      <div class="frow three">
+        <label class="f">Search<input id="fq" type="search" placeholder="Biryani, bread, milk…" value="${esc(F.q)}"></label>
+        <label class="f">Pickup location<select id="floc"><option>All</option>${locs.map(x=>`<option ${x===F.loc?'selected':''}>${esc(x)}</option>`).join('')}</select></label>
+        <label class="f">Sort by<select id="fsort"><option value="soon">Closing soonest</option><option value="qty">Most portions left</option><option value="new">Newest first</option></select></label>
+      </div>
+      <div><div class="pills" id="fcats" role="group" aria-label="Category">${['All',...CATS].map(c=>`<button class="pill" type="button" data-c="${esc(c)}" aria-pressed="${c===F.cat}">${esc(c)}</button>`).join('')}</div></div>
+      <label class="checkrow"><input type="checkbox" id="fhide" ${F.hide?'checked':''}> Hide claimed-out and expired listings</label>
+    </div>
+    <p class="count" id="fcount" aria-live="polite"></p>
+    <div id="fres"></div>
+  </div></div>`;
+}
+function bindFind(hl){
+  const q=$('#fq');if(!q)return;
+  $('#fsort').value=F.sort;
+  const upd=()=>{
+    F.q=q.value.trim();F.loc=$('#floc').value;F.sort=$('#fsort').value;F.hide=$('#fhide').checked;
+    let r=db.listings.filter(l=>{
+      if(F.cat!=='All'&&l.category!==F.cat)return false;
+      if(F.loc!=='All'&&l.location!==F.loc)return false;
+      if(F.hide&&!isActive(l))return false;
+      if(F.q){const t=(l.name+' '+l.desc+' '+l.donor+' '+l.location+' '+l.category).toLowerCase();if(!t.includes(F.q.toLowerCase()))return false;}
+      return true;});
+    r.sort((a,b)=>F.sort==='qty'?b.remaining-a.remaining:F.sort==='new'?b.created-a.created:a.until-b.until);
+    $('#fcount').textContent=`Showing ${r.length} ${r.length===1?'listing':'listings'}`;
+    $('#fres').innerHTML=r.length?`<div class="grid">${r.map(l=>card(l,l.id===hl)).join('')}</div>`:
+      `<div class="empty"><h3>No food matches those filters</h3><p>Try another category or location, or post something yourself.</p><button class="btn small" id="fclear" type="button">Clear filters</button></div>`;
+    const c=$('#fclear');if(c)c.onclick=()=>{F.q='';F.cat='All';F.loc='All';F.hide=true;route();};
+  };
+  q.oninput=upd;$('#floc').onchange=upd;$('#fsort').onchange=upd;$('#fhide').onchange=upd;
+  $('#fcats').onclick=e=>{const b=e.target.closest('.pill');if(!b)return;F.cat=b.dataset.c;[...$('#fcats').children].forEach(x=>x.setAttribute('aria-pressed',x===b));upd();};
+  upd();
+  if(hl){const el=document.getElementById('l-'+hl);if(el)el.scrollIntoView({block:'center'});}
+}
+
+function pad(n){return String(n).padStart(2,'0');}
+function localInput(ts){const d=new Date(ts);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;}
+function viewDonate(){
+  setTimeout(bindDonate,0);
+  return `<div class="fadein"><div class="wrap">
+    <div class="pagehead"><h1>Post surplus food</h1><p>It takes about a minute. Once you post it, it appears on the Find Food page straight away.</p></div>
+    <div class="two">
+      <form class="panel" id="dform" novalidate>
+        <div class="fgrid c2">
+          <label class="f full">Food name<input name="name" required maxlength="60" placeholder="e.g. Veg fried rice"></label>
+          <label class="f">Category<select name="category" required>${CATS.map(c=>`<option>${esc(c)}</option>`).join('')}</select></label>
+          <label class="f">Quantity <span class="hintx">(portions)</span><input name="qty" type="number" min="1" max="1000" required placeholder="25" inputmode="numeric"></label>
+          <label class="f full">Pickup location<input name="location" required maxlength="90" placeholder="Building, area or street"></label>
+          <label class="f">Available until<input name="until" type="datetime-local" required min="${localInput(Date.now())}" value="${localInput(Date.now()+3*60*MIN)}"></label>
+          <label class="f">Posted by<input name="donor" required maxlength="60" placeholder="Your canteen or restaurant"></label>
+          <label class="f full">Description<textarea name="desc" required maxlength="300" placeholder="What is it, how was it stored, any allergens? Should people bring containers?"></textarea></label>
+        </div>
+        <p class="err" id="derr" role="alert"></p>
+        <button class="btn primary" type="submit">Post food</button>
+      </form>
+      <aside class="aside">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><use href="#i-bowl"/></svg>
+        <h3>Good listings get claimed fast</h3>
+        <ul>
+          <li>Say what is in it so people with allergies can decide.</li>
+          <li>Set a realistic end time. Claimers need travel time.</li>
+          <li>Give a landmark, like "back gate of Block C".</li>
+          <li>Post only food that is safe to eat today.</li>
+        </ul>
+      </aside>
+    </div>
+  </div></div>`;
+}
+function bindDonate(){
+  const f=$('#dform');if(!f)return;
+  f.onsubmit=e=>{
+    e.preventDefault();
+    const d=Object.fromEntries(new FormData(f).entries());
+    const err=$('#derr');
+    const qty=parseInt(d.qty,10),until=new Date(d.until).getTime();
+    if(!d.name.trim()||!d.location.trim()||!d.donor.trim()||!d.desc.trim()){err.textContent='Fill in every field before posting.';return;}
+    if(!(qty>=1)){err.textContent='Quantity must be at least 1 portion.';return;}
+    if(!(until>Date.now())){err.textContent='Pick an end time that is later than now.';return;}
+    const l={id:'u'+Date.now(),name:d.name.trim(),category:d.category,quantity:qty,remaining:qty,location:d.location.trim(),donor:d.donor.trim(),until,desc:d.desc.trim(),created:Date.now()};
+    db.listings.unshift(l);save();
+    F.cat='All';F.q='';F.loc='All';F.hide=true;
+    toast('Posted. '+l.name+' is now live.');
+    go('/find?new='+l.id);
+  };
+}
+
+function viewClaim(id){
+  const l=db.listings.find(x=>x.id===id);
+  if(!l)return `<div class="wrap fadein"><div class="pagehead"><h1>We can't find that listing</h1><p>It may have been removed. Browse what is available instead.</p><p><a class="btn primary" href="#/find">Find Food</a></p></div></div>`;
+  setTimeout(()=>bindClaim(l.id),0);
+  const a=ART[l.category]||ART[CATS[0]],s=status(l);
+  const can=(s==='open'||s==='soon');
+  return `<div class="fadein"><div class="wrap">
+    <div class="pagehead"><a href="#/find" class="linkbtn">Back to all food</a><h1 style="margin-top:10px">Claim food</h1></div>
+    <div class="two even">
+      <div class="itemhead">
+        <div class="big" style="background:${a.bg}">${tileArt(l.category)}</div>
+        <div class="info">
+          <h2>${esc(l.name)}</h2>
+          <p style="margin:0;color:var(--muted)">${esc(l.desc)}</p>
+          <div class="meta">
+            <div>${pin}<span>${esc(l.location)}</span></div>
+            <div>${clock}<span>Available until ${fmtTime(l.until)} (${timeLeft(l)})</span></div>
+            <div><span>Posted by ${esc(l.donor)}</span></div>
+          </div>
+          <div class="qty"><div class="bar" aria-hidden="true"><i id="cbar" style="width:${Math.round(l.remaining/l.quantity*100)}%"></i></div><span id="crem"><b>${l.remaining}</b> of ${l.quantity} portions left</span></div>
+        </div>
+      </div>
+      <div class="panel" id="cpanel">
+        ${can?`<h3>How many portions do you need?</h3>
+        <form id="cform" novalidate>
+          <div class="stepper"><button type="button" id="cm" aria-label="One less">−</button><input id="cq" type="number" min="1" max="${l.remaining}" value="1" inputmode="numeric" aria-label="Claim quantity"><button type="button" id="cp" aria-label="One more">+</button><span class="hintx">max ${l.remaining}</span></div>
+          <p class="after" id="cafter"></p>
+          <div class="fgrid">
+            <label class="f">Your name or organisation<input id="cn" required maxlength="60" placeholder="e.g. Hope Night Shelter"></label>
+            <label class="f">Phone number<input id="cph" type="tel" required maxlength="20" placeholder="For the donor to reach you" inputmode="tel"></label>
+          </div>
+          <p class="err" id="cerr" role="alert"></p>
+          <button class="btn primary" type="submit">Confirm claim</button>
+        </form>`:`<h3>This listing is closed</h3><p style="color:var(--muted)">${s==='out'?'All portions have been claimed.':'The pickup window has ended.'} Look for something else nearby.</p><a class="btn primary" href="#/find">Find Food</a>`}
+      </div>
+    </div>
+  </div></div>`;
+}
+function bindClaim(id){
+  const form=$('#cform');if(!form)return;
+  const l=db.listings.find(x=>x.id===id);
+  const q=$('#cq'),after=$('#cafter');
+  const clamp=()=>{let v=parseInt(q.value,10);if(isNaN(v)||v<1)v=1;if(v>l.remaining)v=l.remaining;return v;};
+  const show=()=>{const v=parseInt(q.value,10)||0;after.innerHTML=`Portions left after your claim: <b>${Math.max(0,l.remaining-v)}</b>`;};
+  $('#cm').onclick=()=>{q.value=Math.max(1,clamp()-1);show();};
+  $('#cp').onclick=()=>{q.value=Math.min(l.remaining,clamp()+1);show();};
+  q.oninput=show;q.onblur=()=>{q.value=clamp();show();};show();
+  form.onsubmit=e=>{
+    e.preventDefault();
+    const err=$('#cerr'),name=$('#cn').value.trim(),ph=$('#cph').value.trim(),n=parseInt(q.value,10);
+    const cur=db.listings.find(x=>x.id===id);
+    if(!isActive(cur)){err.textContent='Sorry, this listing just closed.';return;}
+    if(!(n>=1)||n>cur.remaining){err.textContent=`Choose between 1 and ${cur.remaining} portions.`;return;}
+    if(!name||ph.replace(/\D/g,'').length<7){err.textContent='Add your name and a phone number of at least 7 digits.';return;}
+    cur.remaining-=n;
+    const code='FL-'+Math.floor(1000+Math.random()*9000);
+    db.claims.unshift({id:'c'+Date.now(),listingId:cur.id,item:cur.name,category:cur.category,name,qty:n,at:Date.now(),code});
+    save();
+    $('#crem').innerHTML=`<b>${cur.remaining}</b> of ${cur.quantity} portions left`;
+    $('#cbar').style.width=Math.round(cur.remaining/cur.quantity*100)+'%';
+    $('#cpanel').innerHTML=`<div class="ok"><div class="stamp">Claimed</div><h2>${n} ${n===1?'portion':'portions'} are yours</h2>
+      <p style="margin:0;color:var(--muted)">Show this code at <b style="color:var(--ink)">${esc(cur.location)}</b> before ${fmtTime(cur.until)}.</p>
+      <div class="code">${code}</div>
+      <p style="margin:0;color:var(--muted)">${cur.remaining>0?cur.remaining+' portions are still available for others.':'That was the last of it.'}</p>
+      <div class="acts"><a class="btn blue" href="#/impact">See impact</a><a class="btn" href="#/find">Find more food</a></div></div>`;
+    toast('Claim confirmed. Quantity updated.');
+  };
+}
+
+function viewImpact(){
+  const st=stats();
+  setTimeout(()=>bindImpact(st),0);
+  const byCat={};CATS.forEach(c=>byCat[c]=0);db.claims.forEach(c=>{byCat[c.category]=(byCat[c.category]||0)+c.qty;});
+  const mx=Math.max(1,...Object.values(byCat));
+  const active=db.listings.filter(isActive).sort((a,b)=>a.until-b.until);
+  const recent=db.claims.slice(0,6);
+  return `<div class="fadein"><div class="wrap">
+    <div class="pagehead"><h1>Impact so far</h1><p>Every claim on FoodLoop is a meal that did not become waste. These numbers update live as people claim food.</p></div>
+    <div class="stats">
+      <div class="stat s1"><div class="v" data-count="${st.kg}">0</div><div class="l">kg of food rescued</div><small>Estimated at ${KG_PER_PORTION} kg per portion</small></div>
+      <div class="stat s2"><div class="v" data-count="${st.portions}">0</div><div class="l">portions distributed</div></div>
+      <div class="stat s3"><div class="v" data-count="${st.claims}">0</div><div class="l">claims made</div></div>
+      <div class="stat s4"><div class="v" data-count="${st.active}">0</div><div class="l">active listings</div></div>
+    </div>
+    <div class="cols">
+      <div class="panel"><h3>Portions rescued by type</h3>
+        ${CATS.map(c=>`<div class="hrow"><span>${esc(c)}</span><div class="t"><i data-w="${Math.round(byCat[c]/mx*100)}" style="background:${BAR_COL[c]}"></i></div><b>${byCat[c]}</b></div>`).join('')}
+      </div>
+      <div class="panel"><h3>Recent claims</h3>
+        ${recent.length?`<ul class="list">${recent.map(c=>`<li><span>${esc(c.name)}<small>${c.qty} × ${esc(c.item)}</small></span><small>${ago(c.at)}</small></li>`).join('')}</ul>`:'<p style="color:var(--muted)">No claims yet. They will show up here.</p>'}
+      </div>
+    </div>
+    <div class="panel" style="margin-top:22px"><h3>Open right now</h3>
+      ${active.length?`<ul class="list">${active.map(l=>`<li><span>${esc(l.name)}<small>${l.remaining} portions · ${esc(l.location)} · ${timeLeft(l)}</small></span><a href="#/claim/${esc(l.id)}">Claim</a></li>`).join('')}</ul>`:'<p style="color:var(--muted)">Nothing is open. <a href="#/donate" style="color:var(--blue);font-weight:700">Post surplus food</a> to get things moving.</p>'}
+    </div>
+    <p class="fine">Want a clean slate for a demo? <button class="linkbtn" id="reset" type="button">Reset demo data</button></p>
+  </div></div>`;
+}
+function bindImpact(){
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('[data-count]').forEach(el=>{
+    const to=+el.dataset.count;if(reduce||to===0){el.textContent=to.toLocaleString();return;}
+    const t0=performance.now();(function f(t){const p=Math.min(1,(t-t0)/800);el.textContent=Math.round(to*(1-Math.pow(1-p,3))).toLocaleString();if(p<1)requestAnimationFrame(f);})(t0);
+  });
+  requestAnimationFrame(()=>document.querySelectorAll('[data-w]').forEach(i=>i.style.width=i.dataset.w+'%'));
+  const r=$('#reset');if(r)r.onclick=()=>{if(confirm('Replace everything with the original demo data?')){db=seed();save();F.cat='All';F.q='';F.loc='All';route();toast('Demo data restored.');}};
+}
+
+/* ---------- router ---------- */
+const TITLES={home:'FoodLoop – Share surplus food, skip the bin',find:'Find Food – FoodLoop',donate:'Donate Food – FoodLoop',claim:'Claim Food – FoodLoop',impact:'Impact Dashboard – FoodLoop'};
+let current=(location.hash||'#/').slice(1)||'/';
+function go(path){
+  current=path||'/';
+  try{history.pushState(null,'','#'+current);}catch(e){}
+  route();
+}
+function route(){
+  const raw=current;
+  const [path,query]=raw.split('?');
+  const parts=path.split('/').filter(Boolean);
+  let key='home',html;
+  if(parts[0]==='find'){key='find';html=viewFind(query);}
+  else if(parts[0]==='donate'){key='donate';html=viewDonate();}
+  else if(parts[0]==='claim'){key='claim';html=viewClaim(decodeURIComponent(parts[1]||''));}
+  else if(parts[0]==='impact'){key='impact';html=viewImpact();}
+  else html=viewHome();
+  $('#app').innerHTML=html;
+  document.title=TITLES[key];
+  const navKey=key==='claim'?'find':key;
+  document.querySelectorAll('[data-nav]').forEach(a=>{if(a.dataset.nav===navKey)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',()=>{current=(location.hash||'#/').slice(1)||'/';route();});
+window.addEventListener('popstate',()=>{current=(location.hash||'#/').slice(1)||'/';route();});
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a[href^="#/"]');
+  if(!a||e.ctrlKey||e.metaKey||e.shiftKey)return;
+  e.preventDefault();
+  go(a.getAttribute('href').slice(1));
+});
+document.addEventListener('click',e=>{const g=e.target.closest('.pop');if(g){g.classList.remove('wig');void g.getBoundingClientRect();g.classList.add('wig');}});
+setInterval(()=>{const k='#'+current.split('?')[0];if(k==='#/find'&&document.activeElement&&document.activeElement.id!=='fq'){const q=$('#fq');if(q)q.dispatchEvent(new Event('input'));}},60000);
+route();
+</script>
+</body>
+</html>
